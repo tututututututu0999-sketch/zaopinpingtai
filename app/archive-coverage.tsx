@@ -1,0 +1,5 @@
+export type ArchiveStatus={total:number;indexed:number;searchable:number;checkedAt:string;projects:{id:string;name:string;total:number;indexed:number;searchable:number;pendingReview:number;waitingVector:number;missingPrimary:number}[]};
+export default function ArchiveCoverage({status}:{status:ArchiveStatus|null}){
+ if(!status)return null;
+ return <details className="archive-coverage"><summary>检索范围：全部 {status.projects.length} 个项目 · {status.searchable} 张可检索 / {status.total} 张已上传</summary><p>所有项目统一参与检索，再按物料、明确年级学科和硬约束筛选，展示最匹配的 3 个套系。独立上传参考不自动进入素材库。</p><div>{status.projects.map(project=><section key={project.id}><b>{project.name}</b><span>{project.indexed} / {project.total} 已索引 · {project.searchable} 可检索</span><small>{[project.pendingReview?`${project.pendingReview} 张待素材审核`:'',project.waitingVector?`${project.waitingVector} 张等待视觉规则确认或向量化`:'',project.missingPrimary?`${project.missingPrimary} 个套系尚无可用主参考`:''].filter(Boolean).join('；')||'已具备检索资格；是否返回取决于本次筛选与匹配'}</small></section>)}</div></details>;
+}

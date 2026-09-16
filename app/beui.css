@@ -1,0 +1,19 @@
+/* Utilities only: preserve the user's existing theme and form reset. */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@source "../components/motion";
+@source "../components/agents";
+@theme inline {
+  --color-background: var(--surface);
+  --color-card: var(--surface);
+  --color-foreground: var(--text);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-text);
+  --color-muted: var(--surface-strong);
+  --color-muted-foreground: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-text);
+  --color-destructive: var(--warning);
+  --color-ring: var(--accent);
+}

@@ -1,0 +1,13 @@
+import {readFile} from 'node:fs/promises';
+import sharp from 'sharp';
+import {PROFILE_PROMPT,validateProfile,GROUPS} from '../visual-rules/v1/index.mjs';
+if(!process.argv[2])throw new Error('Pass one preview image path. This probe does not import or publish assets.');
+const preview=await sharp(await readFile(process.argv[2])).resize({width:1024,height:1024,fit:'inside',withoutEnlargement:true}).jpeg({quality:82}).toBuffer();
+const configured=process.env.AI_GATEWAY_BASE_URL?.replace(/\/$/,'');if(!configured||!process.env.AI_GATEWAY_API_KEY)throw new Error('Gateway configuration missing');
+const base=configured.endsWith('/v1')?configured:`${configured}/v1`;
+const response=await fetch(`${base}/responses`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${process.env.AI_GATEWAY_API_KEY}`},body:JSON.stringify({model:process.env.LUNA_MODEL||'gpt-5.6-luna',text:{format:{type:'json_object'}},input:[{role:'system',content:[{type:'input_text',text:PROFILE_PROMPT}]},{role:'user',content:[{type:'input_text',text:'只识别图片中可见的视觉结构。'},{type:'input_image',image_url:`data:image/jpeg;base64,${preview.toString('base64')}`}]}]}),signal:AbortSignal.timeout(90000)});
+if(!response.ok)throw new Error(`Vision preflight HTTP ${response.status}`);
+const data=await response.json();const content=data.output?.flatMap(item=>item.content||[]).find(item=>item.type==='output_text')?.text;
+if(!content)throw new Error('Missing model output');
+const profile=validateProfile(JSON.parse(content.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'')));
+console.log(JSON.stringify(Object.fromEntries(Object.keys(GROUPS).map(key=>[key,{status:profile[key].status,confidence:profile[key].confidence,types:profile[key].types}]))));

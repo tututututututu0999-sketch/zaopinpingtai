@@ -1,0 +1,2 @@
+export function promptConflicts(draft:{prompt:string;negativePrompt?:string;referencePlan?:{sellingType:string}},context?:{uploadedReferences?:{role:string}[];referencePlan?:{sellingType:string}}):string[];
+export function assertPromptCompatible(draft:{prompt:string;negativePrompt?:string;referencePlan?:{sellingType:string}},context?:{uploadedReferences?:{role:string}[];referencePlan?:{sellingType:string}}):void;

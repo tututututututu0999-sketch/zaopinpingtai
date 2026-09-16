@@ -1,0 +1,8 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+Pillow==11.1.0
+torch==2.5.1
+torchvision==0.20.1
+transformers==4.48.1
+timm==1.0.24
+einops==0.8.1

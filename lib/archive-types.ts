@@ -1,0 +1,41 @@
+export type ArchiveAsset = {
+  visualRevisionId?:string|null;
+  visualProfile?:import('@/visual-rules/v1/index.mjs').VisualProfile|null;
+  adaptationNotes?:string;
+  id: string;
+  filename: string;
+  displayName: string;
+  projectId: string | null;
+  projectName: string | null;
+  suiteId: string | null;
+  suiteName: string | null;
+  materialType: string;
+  grade: string | null;
+  subject: string | null;
+  colors: string[];
+  tags: string[];
+  visualStyle: string | null;
+  layoutFeatures: string | null;
+  coreElements: string[];
+  ocrText: string | null;
+  description: string | null;
+  reviewState: string;
+  reuseState: string;
+  confidence: number | null;
+  analysisStatus: string;
+  embeddingStatus: string;
+  errorMessage: string | null;
+  isPrimary: boolean;
+  previewUrl: string | null;
+};
+
+export type CandidateSuite = {
+  suiteId: string;
+  projectId: string;
+  projectName: string;
+  suiteName: string;
+  score: number;
+  matchReasons: string[];
+  primary: ArchiveAsset;
+  helpers: ArchiveAsset[];
+};

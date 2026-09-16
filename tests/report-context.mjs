@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {createJiti} from 'jiti';
+import {emptyProfile} from '../visual-rules/v1/index.mjs';
+const {referenceReportInput}=await createJiti(import.meta.url,{alias:{'@':process.cwd()}}).import('../lib/report-context.ts');
+const profile=emptyProfile();profile.title.outline='白字蓝描边';profile.title.evidence='标题区域可见';profile.selling.count='4';
+const analysis={originalBrief:'四条卖点，必须保留人物',hardConstraints:[{value:'真人肖像'}],mustAvoid:['旧品牌'],searchQuery:'重复检索语句'};
+const result=referenceReportInput({analysis,primaryDescription:JSON.stringify({role:'character',instruction:'必须出现人物',profile}),helperDescriptions:['旧版文字描述保持完整']});
+assert.equal(result.analysis.originalBrief,analysis.originalBrief);assert.deepEqual(result.analysis.hardConstraints,analysis.hardConstraints);assert.deepEqual(result.analysis.mustAvoid,analysis.mustAvoid);
+assert.equal(JSON.parse(result.primaryDescription).profile.title.outline,'白字蓝描边');assert.equal(JSON.parse(result.primaryDescription).profile.selling.count,'4');assert.equal(JSON.parse(result.primaryDescription).instruction,'必须出现人物');assert.ok(!result.primaryDescription.includes('confidence'));assert.ok(!result.primaryDescription.includes('evidence'));assert.equal(result.helperDescriptions[0],'旧版文字描述保持完整');
+console.log('PASS report context retains original requirements, all visual fields and reference roles while dropping duplicate audit metadata');

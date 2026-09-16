@@ -1,0 +1,88 @@
+services:
+  app:
+    build: .
+    image: visual-suite-app:local
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://visual:visual@postgres:5432/visual_archive
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
+      S3_BUCKET: ${S3_BUCKET:-visual-assets}
+      EMBEDDING_SERVICE_URL: http://embedding:8080
+    # The AI gateway is reachable through the Mac host on internal networks.
+    # Keep its public hostname so TLS verification and request routing stay intact.
+    extra_hosts:
+      - "ccproxy.yukework.com:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      embedding:
+        condition: service_started
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: visual_archive
+      POSTGRES_USER: visual
+      POSTGRES_PASSWORD: visual
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U visual -d visual_archive"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./prisma/init/01-vector.sql:/docker-entrypoint-initdb.d/01-vector.sql:ro
+    ports:
+      - "5432:5432"
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
+    ports:
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+  embedding:
+    build: ./embedding-service
+    environment:
+      EMBEDDING_MODEL: jinaai/jina-clip-v2
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+    volumes:
+      - embedding_models:/root/.cache/huggingface
+    ports:
+      - "8080:8080"
+  worker:
+    # The worker runs from the same application image as the web service.
+    # Building it separately would duplicate the full dependency installation.
+    image: visual-suite-app:local
+    command: node worker.mjs
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://visual:visual@postgres:5432/visual_archive
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
+      S3_BUCKET: ${S3_BUCKET:-visual-assets}
+      EMBEDDING_SERVICE_URL: http://embedding:8080
+    extra_hosts:
+      - "ccproxy.yukework.com:host-gateway"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      embedding:
+        condition: service_started
+volumes:
+  postgres_data:
+  minio_data:
+  embedding_models:

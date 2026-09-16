@@ -1,0 +1,9 @@
+node_modules
+.next
+.env
+*.log
+coverage
+
+*.zip
+.DS_Store
+**/.DS_Store

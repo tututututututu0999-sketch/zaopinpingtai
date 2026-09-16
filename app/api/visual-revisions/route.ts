@@ -1,0 +1,5 @@
+import {NextResponse} from 'next/server';
+import {listVisualRevisions,queueVisualUpgrade,confirmVisualRevisions} from '@/lib/visual-revisions';
+export async function GET(){try{return NextResponse.json(await listVisualRevisions());}catch{return NextResponse.json({error:'视觉修订暂时无法读取，请确认数据库迁移已完成'},{status:503});}}
+export async function POST(request:Request){try{const body=await request.json();if(body.assetIds!==undefined&&(!Array.isArray(body.assetIds)||body.assetIds.some((id:unknown)=>typeof id!=='string')))throw new Error('素材列表无效');if(body.force&&!body.assetIds?.length)throw new Error('重新识别必须指定素材');return NextResponse.json(await queueVisualUpgrade(body.assetIds,body.force===true));}catch(error){return NextResponse.json({error:error instanceof Error?error.message:'提交升级失败'},{status:400});}}
+export async function PATCH(request:Request){try{const body=await request.json();if(!Array.isArray(body.items))throw new Error('缺少审核素材');return NextResponse.json(await confirmVisualRevisions(body.items));}catch(error){return NextResponse.json({error:error instanceof Error?error.message:'视觉审核失败'},{status:400});}}
